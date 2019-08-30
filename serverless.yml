@@ -1,0 +1,46 @@
+service:
+  name: styled-redux
+
+plugins:
+  - serverless-single-page-app-plugin
+  
+# the custom section
+custom:
+  
+
+package:
+
+provider:
+  region: us-east-1
+  stackName: ${self:service.name}-${self:provider.stage, env:STAGE, 'dev'}
+  staticBucket: infrcomp-styled-redux-${self:provider.stage, env:STAGE, 'dev'}
+  name: aws
+  runtime: nodejs8.10
+  
+functions:
+
+resources:
+  Resources:
+    WebAppS3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.staticBucket}
+        AccessControl: PublicRead
+        WebsiteConfiguration:
+          IndexDocument: index.html
+          ErrorDocument: index.html
+    WebAppS3BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket:
+          Ref: WebAppS3Bucket
+        PolicyDocument:
+          Statement:
+            Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: "*"
+            Action:
+              - s3:GetObject
+            Resource:
+              Fn::Join: ["", ["arn:aws:s3:::", {"Ref": "WebAppS3Bucket" }, "/*"]]
+
